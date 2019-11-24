@@ -143,8 +143,10 @@ private:
     std::deque<coroutine::routine_t> m_queue;
 };
 
+namespace _private {
+
 template<class T>
-class Channel {
+class chan_impl : public QSharedData {
 public:
     T read() {
         m_mutex.lock();
@@ -170,15 +172,6 @@ public:
         m_mutex.unlock();
     }
 
-    Channel<T> &operator << (const T &v) {
-        write(v);
-        return *this;
-    }
-    Channel<T> &operator >> (T &v) {
-        v = read();
-        return *this;
-    }
-
 private:
     std::optional<T> m_value;
     QMutex m_mutex;
@@ -186,6 +179,29 @@ private:
     WaitCondition m_wc2;
     QWaitCondition m_writers;
 
+};
+}
+
+template <typename T>
+class chan
+{
+    using impl = _private::chan_impl<T>;
+public:
+    chan() :
+        m_data(new impl())
+    {}
+
+    chan &operator << (const T &v) {
+        m_data->write(v);
+        return *this;
+    }
+    chan &operator >> (T &v) {
+        v = m_data->read();
+        return *this;
+    }
+
+private:
+    QExplicitlySharedDataPointer<impl> m_data;
 };
 
 }

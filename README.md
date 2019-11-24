@@ -14,12 +14,12 @@ Qt is used to deal with low level stuff like mutex of thread messages.
 
 ## Example
 ```c++
-auto c = new go::Channel<quint32>();
-go::go([c](){
+go::chan<quint32> c;
+go::go([c]() mutable {
     for (;;) {
         auto val = QRandomGenerator::system()->generate();
         qDebug() << val;
-        *c << val;
+        c << val;
         go::sleep(5000);
     }
 });
@@ -41,4 +41,3 @@ go func f() {
 ## To do
 - Use a thread pool instead of a single thread.
 - Create extra threads dynamically when a coroutine blocks.
-- Make channel an "explicitly shared data" class so that we can copy channels around instead of dealing with pointers.
